@@ -28,4 +28,3 @@ $ ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True ma
 ## To Do
 
 ---
-turtlebot packages are from 
