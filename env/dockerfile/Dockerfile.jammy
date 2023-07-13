@@ -1,0 +1,67 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set locale
+RUN apt update -y && apt install locales && \
+     locale-gen en_US en_US.UTF-8 && \
+     update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
+     export LANG=en_US.UTF-8
+    
+# Setup Sources 
+RUN apt install software-properties-common -y && \
+    add-apt-repository universe && \
+    apt update && apt install curl -y && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# Install ROS2 packages 
+RUN apt update && \
+    apt upgrade -y && \
+    apt install ros-humble-desktop -y
+
+# Install Colcon
+RUN apt install -y python3-colcon-common-extensions && \
+    apt update && apt install -y \
+    python3-flake8-docstrings \
+    python3-pip \
+    python3-pytest-cov \
+    ros-dev-tools \
+    python3-flake8-blind-except \
+    python3-flake8-builtins \
+    python3-flake8-class-newline \
+    python3-flake8-comprehensions \
+    python3-flake8-deprecated \
+    python3-flake8-import-order \
+    python3-flake8-quotes \
+    python3-pytest-repeat \
+    python3-pytest-rerunfailures
+
+# Install gazebo packages
+RUN apt install -y ros-humble-navigation2 \
+    ros-humble-nav2-bringup \
+    ros-humble-gazebo-dev \
+    ros-humble-gazebo-msgs \
+    ros-humble-gazebo-plugins \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-gazebo-ros2-control
+
+# Install turtlebot packages
+RUN rosdep init && rosdep update && \
+    mkdir -p ~/turtlebot_pkgs/src && \
+    cd  ~/turtlebot_pkgs/src/ && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/DynamixelSDK.git && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
+    cd  ~/turtlebot_pkgs && \
+    /bin/bash -c ". /opt/ros/humble/setup.bash && rosdep install -y -r -q --from-paths src --ignore-src --rosdistro humble && colcon build --symlink-install"
+
+# Install rmw-cyclonedds-cpp
+RUN apt-get install -y ros-humble-rmw-cyclonedds-cpp
+
+# Setup
+COPY dockerfile/ros_entrypoint.sh /ros_entrypoint.sh
+RUN chmod +x /ros_entrypoint.sh
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["zsh"]
