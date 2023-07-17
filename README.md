@@ -22,7 +22,8 @@ $ ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 $ docker exec -it turtle3 zsh
 
 // inside the container
-$ ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=workspace/src/turtlebot3/turtlebot3_navigation2/map/map.yaml
+$ cd /workspace 
+$ ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=/root/turtlebot_pkgs/src/turtlebot3/turtlebot3_navigation2/map/map.yaml
 ```
 ---
 ## To Do
